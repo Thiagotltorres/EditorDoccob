@@ -1,0 +1,1461 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EDI PROCEDA DOCCOB 3.0A — Auditor & Editor Visual</title>
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --border: #cbd5e1;
+      --border-light: #e2e8f0;
+      --text: #0f172a;
+      --text-muted: #475569;
+      --primary: #1d4ed8;
+      --primary-hover: #1e40af;
+      --primary-soft: #eff6ff;
+      --success: #15803d;
+      --success-bg: #dcfce7;
+      --danger: #b91c1c;
+      --danger-bg: #fee2e2;
+      --warning: #b45309;
+      --warning-bg: #fef3c7;
+      --mono: "JetBrains Mono", "Fira Code", "Consolas", "Courier New", monospace;
+      --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+
+    header {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 14px 24px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 3px solid var(--primary);
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    header h1 span.badge {
+      background: var(--primary);
+      color: #fff;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    button, .btn {
+      font-family: var(--sans);
+      font-size: 0.84rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+
+    .btn-success {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-success:hover { background: #166534; }
+
+    .btn-warning {
+      background: #d97706;
+      color: #fff;
+    }
+    .btn-warning:hover { background: #b45309; }
+
+    .btn-outline {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--border);
+    }
+    .btn-outline:hover { background: var(--surface-alt); }
+
+    .btn-dark-outline {
+      background: rgba(255,255,255,0.08);
+      color: #f8fafc;
+      border-color: rgba(255,255,255,0.22);
+    }
+    .btn-dark-outline:hover { background: rgba(255,255,255,0.16); }
+
+    #fileInput {
+      position: fixed;
+      left: -9999px;
+      top: -9999px;
+      opacity: 0;
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 18px 24px 48px;
+    }
+
+    /* Dropzone */
+    .dropzone {
+      background: var(--surface);
+      border: 2px dashed #94a3b8;
+      border-radius: 10px;
+      padding: 28px 20px;
+      text-align: center;
+      transition: all 0.2s ease;
+      margin-bottom: 18px;
+    }
+    .dropzone.dragover {
+      border-color: var(--primary);
+      background: var(--primary-soft);
+    }
+    .dropzone h2 {
+      margin: 0 0 6px;
+      font-size: 1.05rem;
+    }
+    .dropzone p {
+      margin: 0 0 14px;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .dropzone-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    /* File Tabs */
+    .file-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .file-tab {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .file-tab.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* Status & Audit Summary */
+    .audit-banner {
+      border-radius: 8px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      border: 1px solid;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .audit-banner.ok {
+      background: var(--success-bg);
+      border-color: #86efac;
+      color: #14532d;
+    }
+    .audit-banner.error {
+      background: var(--danger-bg);
+      border-color: #fca5a5;
+      color: #7f1d1d;
+    }
+    .audit-title {
+      font-weight: 700;
+      font-size: 0.96rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .error-list {
+      width: 100%;
+      margin: 8px 0 0;
+      padding-left: 20px;
+      font-size: 0.85rem;
+    }
+    .error-list li {
+      margin-bottom: 4px;
+    }
+
+    /* Main Grid */
+    .workspace {
+      display: grid;
+      grid-template-columns: 390px 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .workspace { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    }
+    .card-header {
+      background: var(--surface-alt);
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-light);
+      font-weight: 700;
+      font-size: 0.88rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* Line List */
+    .line-list {
+      max-height: 680px;
+      overflow-y: auto;
+    }
+    .line-item {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--border-light);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 0.82rem;
+      transition: background 0.12s;
+    }
+    .line-item:hover { background: var(--surface-alt); }
+    .line-item.selected {
+      background: var(--primary-soft);
+      border-left: 4px solid var(--primary);
+    }
+    .line-item.has-error {
+      background: #fff5f5;
+    }
+    .line-item.has-error.selected {
+      background: #fee2e2;
+      border-left: 4px solid var(--danger);
+    }
+    .line-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+    .line-num {
+      font-family: var(--mono);
+      color: var(--text-muted);
+      font-size: 0.76rem;
+      min-width: 24px;
+    }
+    .rec-badge {
+      font-family: var(--mono);
+      font-weight: 700;
+      font-size: 0.76rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: #e2e8f0;
+      color: #1e293b;
+    }
+    .rec-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .len-pill {
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .len-pill.ok { background: var(--success-bg); color: var(--success); }
+    .len-pill.err { background: var(--danger-bg); color: var(--danger); }
+
+    /* Positional Ruler & Raw Line */
+    .ruler-box {
+      padding: 12px 14px;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+    .ruler-label {
+      font-size: 0.74rem;
+      color: #94a3b8;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .ruler-strip {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      white-space: pre;
+      line-height: 1.35;
+    }
+    .ruler-ticks { color: #64748b; }
+    .char-cell {
+      display: inline-block;
+      padding: 1px 0;
+    }
+    .char-cell.highlight {
+      background: #2563eb;
+      color: #ffffff;
+      font-weight: 700;
+      border-radius: 2px;
+    }
+    .char-cell.overflow {
+      background: #dc2626;
+      color: #ffffff;
+      font-weight: 700;
+    }
+    .char-cell.space-dot {
+      color: #475569;
+    }
+    .char-cell.highlight.space-dot {
+      color: #bfdbfe;
+    }
+
+    /* Fields Table */
+    .fields-table-wrap {
+      overflow-x: auto;
+    }
+    table.fields-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    table.fields-table th {
+      background: var(--surface-alt);
+      text-align: left;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+    table.fields-table td {
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--border-light);
+      vertical-align: middle;
+    }
+    table.fields-table tr:hover {
+      background: #f8fafc;
+    }
+    table.fields-table tr.field-error {
+      background: #fef2f2;
+    }
+    table.fields-table tr.field-error td {
+      border-bottom-color: #fecaca;
+    }
+    .pos-tag {
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+    .fmt-tag {
+      font-family: var(--mono);
+      font-size: 0.74rem;
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      padding: 1px 5px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .status-req {
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 1px 5px;
+      border-radius: 3px;
+    }
+    .status-req.M { background: #dbeafe; color: #1e40af; }
+    .status-req.C { background: #f1f5f9; color: #475569; }
+
+    .field-input, .field-select {
+      width: 100%;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      padding: 5px 8px;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+    }
+    .field-input:focus, .field-select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(29, 78, 216, 0.15);
+    }
+    .field-err-msg {
+      color: var(--danger);
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+    .field-hint {
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      margin-top: 2px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.6);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--surface);
+      border-radius: 10px;
+      width: 100%;
+      max-width: 780px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2);
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-light);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+    }
+    .modal-body { padding: 16px 18px; }
+    .modal-body textarea {
+      width: 100%;
+      height: 240px;
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      white-space: pre;
+      overflow-x: auto;
+    }
+    .modal-footer {
+      padding: 12px 18px;
+      background: var(--surface-alt);
+      border-top: 1px solid var(--border-light);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease;
+      z-index: 1100;
+    }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>
+      EDI PROCEDA DOCCOB 3.0A
+      <span class="badge">Auditor & Editor Visual</span>
+    </h1>
+    <div class="toolbar">
+      <label for="fileInput" class="btn btn-primary">📂 Selecionar Arquivo(s)</label>
+      <button type="button" class="btn btn-dark-outline" id="btnOpenPaste">📋 Colar Texto DOCCOB</button>
+      <button type="button" class="btn btn-warning" id="btnAutoFix" style="display:none;">✨ Auto-Corrigir Todos os Erros</button>
+      <button type="button" class="btn btn-success" id="btnDownload" style="display:none;">⬇️ Baixar Corrigido (.txt)</button>
+    </div>
+  </header>
+
+  <input type="file" id="fileInput" accept=".txt,.edi,.rem,.ret,*/*" multiple />
+
+  <div class="container">
+    <div class="dropzone" id="dropzone">
+      <h2>Carregue um arquivo DOCCOB 3.0A (.txt / .edi)</h2>
+      <p>Arraste e solte os arquivos aqui, selecione do computador ou cole o conteúdo para validar as 170 posições.</p>
+      <div class="dropzone-actions">
+        <label for="fileInput" class="btn btn-primary">📂 Selecionar Arquivo(s)</label>
+        <button type="button" class="btn btn-outline" id="btnPasteEmpty">📋 Colar Texto do Arquivo</button>
+        <button type="button" class="btn btn-outline" id="btnSample1">🧪 Exemplo 1 (Deslocamento + Total 355)</button>
+        <button type="button" class="btn btn-outline" id="btnSample2">🧪 Exemplo 2 (Erro TMS Pos. 167)</button>
+      </div>
+    </div>
+
+    <div class="file-tabs" id="fileTabs"></div>
+
+    <div id="auditArea" style="display:none;">
+      <div class="audit-banner" id="auditBanner"></div>
+
+      <div class="workspace">
+        <div class="card">
+          <div class="card-header">
+            <span>Registros do Arquivo (<span id="lineCount">0</span>)</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);font-weight:500;">Padrão: 170 bytes</span>
+          </div>
+          <div class="line-list" id="lineList"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span id="editorTitle">Detalhamento de Campos</span>
+            <span id="editorLineInfo" style="font-family:var(--mono);font-size:0.78rem;color:var(--text-muted);"></span>
+          </div>
+
+          <div class="ruler-box">
+            <div class="ruler-label">
+              <span>Régua Posicional (1 a 170 — espaços exibidos como ·)</span>
+              <span id="rulerHighlightInfo">Passe ou clique em um campo abaixo</span>
+            </div>
+            <div class="ruler-strip" id="rulerStrip"></div>
+          </div>
+
+          <div class="fields-table-wrap">
+            <table class="fields-table">
+              <thead>
+                <tr>
+                  <th style="width:76px;">Posição</th>
+                  <th>Campo (Layout PROCEDA 3.0A)</th>
+                  <th style="width:68px;">Formato</th>
+                  <th style="width:48px;">Cond.</th>
+                  <th style="min-width:240px;">Valor Atual (Editável)</th>
+                </tr>
+              </thead>
+              <tbody id="fieldsTbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Colar Texto -->
+  <div class="modal-backdrop" id="pasteModal">
+    <div class="modal">
+      <div class="modal-header">
+        <span>Colar Conteúdo do Arquivo DOCCOB</span>
+        <button type="button" class="btn btn-outline" id="btnClosePaste" style="padding:4px 10px;">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin:0 0 8px;font-size:0.84rem;color:var(--text-muted);">
+          Abra seu arquivo <code>.txt</code> no Bloco de Notas, copie todo o conteúdo (<code>Ctrl+A</code>, <code>Ctrl+C</code>) e cole abaixo:
+        </p>
+        <input type="text" id="pasteFileName" class="field-input" value="doccob_colado.txt" style="margin-bottom:8px;" placeholder="Nome do arquivo..." />
+        <textarea id="pasteTextarea" placeholder="000...&#10;350...&#10;351...&#10;352...&#10;353...&#10;354...&#10;355..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" id="btnCancelPaste">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="btnConfirmPaste">Carregar e Auditar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // =========================================================================
+    // DEFINIÇÃO DO LAYOUT EDI PROCEDA DOCCOB 3.0A (170 BYTES POR REGISTRO)
+    // =========================================================================
+    const LAYOUTS = {
+      "000": {
+        name: "UNB — Cabeçalho de Intercâmbio",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "000" },
+          { n: 2, name: "Identificação do Remetente", start: 4, len: 35, type: "A", dec: 0, req: "M", hint: "Caixa postal do remetente" },
+          { n: 3, name: "Identificação do Destinatário", start: 39, len: 35, type: "A", dec: 0, req: "M", hint: "Caixa postal do destinatário" },
+          { n: 4, name: "Data", start: 74, len: 6, type: "N", dec: 0, req: "M", hint: "DDMMAA" },
+          { n: 5, name: "Hora", start: 80, len: 4, type: "N", dec: 0, req: "M", hint: "HHMM" },
+          { n: 6, name: "Identificação do Intercâmbio", start: 84, len: 12, type: "A", dec: 0, req: "M", hint: "COBDDMMHHMMS" },
+          { n: 7, name: "Filler", start: 96, len: 75, type: "A", dec: 0, req: "C", hint: "Preencher com brancos" }
+        ]
+      },
+      "350": {
+        name: "UNH — Cabeçalho de Documento",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "350" },
+          { n: 2, name: "Identificação do Documento", start: 4, len: 14, type: "A", dec: 0, req: "M", hint: "COBRADDMMHHMMS" },
+          { n: 3, name: "Filler", start: 18, len: 153, type: "A", dec: 0, req: "C", hint: "Preencher com brancos" }
+        ]
+      },
+      "351": {
+        name: "TRA — Dados da Transportadora",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "351" },
+          { n: 2, name: "C.G.C. (CNPJ)", start: 4, len: 14, type: "N", dec: 0, req: "M", hint: "Sem pontos/traços (14 dígitos)" },
+          { n: 3, name: "Razão Social", start: 18, len: 40, type: "A", dec: 0, req: "C" },
+          { n: 4, name: "Filler", start: 58, len: 113, type: "A", dec: 0, req: "C", hint: "Preencher com brancos" }
+        ]
+      },
+      "352": {
+        name: "DCO — Documento de Cobrança",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "352" },
+          { n: 2, name: "Filial Emissora do Documento", start: 4, len: 10, type: "A", dec: 0, req: "M" },
+          { n: 3, name: "Tipo do Documento de Cobrança", start: 14, len: 1, type: "N", dec: 0, req: "M", allowed: ["0", "1"], hint: "0 = Nota Fiscal Fatura | 1 = Romaneio" },
+          { n: 4, name: "Série do Documento de Cobrança", start: 15, len: 3, type: "A", dec: 0, req: "C" },
+          { n: 5, name: "Número do Documento de Cobrança", start: 18, len: 10, type: "N", dec: 0, req: "M", hint: "Numérico alinhado à direita com zeros à esquerda" },
+          { n: 6, name: "Data de Emissão", start: 28, len: 8, type: "N", dec: 0, req: "M", hint: "DDMMAAAA" },
+          { n: 7, name: "Data de Vencimento", start: 36, len: 8, type: "N", dec: 0, req: "M", hint: "DDMMAAAA" },
+          { n: 8, name: "Valor do Documento de Cobrança", start: 44, len: 15, type: "N", dec: 2, req: "M", hint: "N 13,2 (13 inteiros + 2 decimais sem vírgula)" },
+          { n: 9, name: "Tipo de Cobrança", start: 59, len: 3, type: "A", dec: 0, req: "M", hint: "Ex: BCO, CAR" },
+          { n: 10, name: "Valor Total do ICMS", start: 62, len: 15, type: "N", dec: 2, req: "M", hint: "N 13,2" },
+          { n: 11, name: "Valor Juros por Dia de Atraso", start: 77, len: 15, type: "N", dec: 2, req: "C", hint: "N 13,2" },
+          { n: 12, name: "Data Limite p/ Pagto c/ Desconto", start: 92, len: 8, type: "N", dec: 0, req: "C", hint: "DDMMAAAA ou zeros" },
+          { n: 13, name: "Valor do Desconto", start: 100, len: 15, type: "N", dec: 2, req: "C", hint: "N 13,2" },
+          { n: 14, name: "Identificação do Agente de Cobrança", start: 115, len: 35, type: "A", dec: 0, req: "M", hint: "Nome do banco (ou brancos)" },
+          { n: 15, name: "Número da Agência Bancária", start: 150, len: 4, type: "N", dec: 0, req: "C" },
+          { n: 16, name: "Dígito Verificador Núm. da Agência", start: 154, len: 1, type: "A", dec: 0, req: "C" },
+          { n: 17, name: "Número da Conta Corrente", start: 155, len: 10, type: "N", dec: 0, req: "C" },
+          { n: 18, name: "Dígito Verificador Conta Corrente", start: 165, len: 2, type: "A", dec: 0, req: "C" },
+          {
+            n: 19,
+            name: "Ação do Documento",
+            start: 167,
+            len: 1,
+            type: "A",
+            dec: 0,
+            req: "M",
+            allowed: ["I", "C", "E"],
+            options: [
+              { value: "I", label: "I — Incluir" },
+              { value: "C", label: "C — Complementar" },
+              { value: "E", label: "E — Excluir / Cancelar" }
+            ],
+            hint: "Obrigatório no TMS: I=Incluir, C=Complementar, E=Excluir"
+          },
+          { n: 20, name: "Filler", start: 168, len: 3, type: "A", dec: 0, req: "C", hint: "3 espaços em branco" }
+        ]
+      },
+      "353": {
+        name: "CCO — Conhecimentos em Cobrança",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "353" },
+          { n: 2, name: "Filial Emissora do Documento", start: 4, len: 10, type: "A", dec: 0, req: "M" },
+          { n: 3, name: "Série do Conhecimento", start: 14, len: 5, type: "A", dec: 0, req: "C" },
+          { n: 4, name: "Número do Conhecimento", start: 19, len: 12, type: "A", dec: 0, req: "M" },
+          { n: 5, name: "Valor do Frete", start: 31, len: 15, type: "N", dec: 2, req: "C", hint: "N 13,2 (opcional)" },
+          { n: 6, name: "Data de Emissão do Conhecimento", start: 46, len: 8, type: "N", dec: 0, req: "C", hint: "DDMMAAAA (opcional)" },
+          { n: 7, name: "CGC do Remetente Emissor da NF", start: 54, len: 14, type: "N", dec: 0, req: "C" },
+          { n: 8, name: "CGC do Destinatário da NF", start: 68, len: 14, type: "N", dec: 0, req: "C" },
+          { n: 9, name: "CGC do Emissor do Conhecimento", start: 82, len: 14, type: "N", dec: 0, req: "C" },
+          { n: 10, name: "Filler", start: 96, len: 75, type: "A", dec: 0, req: "C", hint: "Preencher com brancos" }
+        ]
+      },
+      "354": {
+        name: "CNF — Notas Fiscais no Conhecimento",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "354" },
+          { n: 2, name: "Série da Nota Fiscal", start: 4, len: 3, type: "A", dec: 0, req: "C" },
+          { n: 3, name: "Número da Nota Fiscal", start: 7, len: 8, type: "N", dec: 0, req: "M" },
+          { n: 4, name: "Data de Emissão da Nota Fiscal", start: 15, len: 8, type: "N", dec: 0, req: "M", hint: "DDMMAAAA" },
+          { n: 5, name: "Peso da Nota Fiscal", start: 23, len: 7, type: "N", dec: 2, req: "M", hint: "N 5,2" },
+          { n: 6, name: "Valor da Mercadoria na NF", start: 30, len: 15, type: "N", dec: 2, req: "M", hint: "N 13,2" },
+          { n: 7, name: "CGC do Emissor da Nota Fiscal", start: 45, len: 14, type: "N", dec: 0, req: "C" },
+          { n: 8, name: "Filler", start: 59, len: 112, type: "A", dec: 0, req: "C", hint: "Preencher com brancos" }
+        ]
+      },
+      "355": {
+        name: "TDC — Total de Documentos de Cobrança",
+        fields: [
+          { n: 1, name: "Identificador de Registro", start: 1, len: 3, type: "N", dec: 0, req: "M", expected: "355" },
+          { n: 2, name: "Qtde. Total Doctos. de Cobrança", start: 4, len: 4, type: "N", dec: 0, req: "M", hint: "Total de registros 352 no arquivo" },
+          { n: 3, name: "Valor Total Doctos. de Cobrança", start: 8, len: 15, type: "N", dec: 2, req: "M", hint: "Soma dos valores dos registros 352" },
+          { n: 4, name: "Filler", start: 23, len: 148, type: "A", dec: 0, req: "C", hint: "Preencher com brancos" }
+        ]
+      }
+    };
+
+    // Exemplos reais reportados
+    const SAMPLE_1 = [
+      "000LUFT LOGISTICS LTDA                ALTA - AMERICA LATINA              0611261305COB061113051                                                                           ",
+      "350COBRA061113051                                                                                                                                                         ",
+      "35187689402000557LUFT LOGISTICS LTDA                                                                                                                                      ",
+      "35205        0105000461348 0611202606122026000000000449982CAR                             00000000000533600000000000000006122026000000000000000                                        00000000000 I   ",
+      "35305        4    000000502813                                                                                                                                            ",
+      "3541  0002797414102026011520000000000855000010409614000347                                                                                                                ",
+      "35305        4    000000503243                                                                                                                                            ",
+      "3541  0002799019102026002304000000000163800010409614000347                                                                                                                ",
+      "35305        4    000000503244                                                                                                                                            ",
+      "3541  0002799219102026003840000000000273000010409614000347                                                                                                                ",
+      "35305        4    000000503247                                                                                                                                            ",
+      "3541  0002801319102026008960000000000637000010409614000347                                                                                                                ",
+      "35305        4    000000504374                                                                                                                                            ",
+      "3541  0002821628102026021328000000000687200010409614000347                                                                                                                ",
+      "3550002000000000449982                                                                                                                                                    "
+    ].join("\r\n");
+
+    const SAMPLE_2 = [
+      "000MMR                                ALTA AMERICANA                     0911261416COB091114160                                                                           ",
+      "350COBRA091114160                                                                                                                                                         ",
+      "35116491518000105MARCELLI MORAES RODRIGUES TRANSPORTES EIRELI                                                                                                                 ",
+      "352MARCELLI M0   00024578260911202630112026000000001354415BCO000000000016253000000000000000030112026000000000000000BANCO BRADESCO S.A.                0045000007778260 I   000000000009735000000000000000000000000001082",
+      "353MARCELLI M1    55650       00000000135441505112026104096140003471040961400050916491518000105                                                                           ",
+      "3541  0002828303112026999999900000005323069910409614000347                                                                                                                ",
+      "3550001000000001354415                                                                                                                                                    "
+    ].join("\r\n");
+
+    // =========================================================================
+    // ESTADO DA APLICAÇÃO
+    // =========================================================================
+    let files = []; // { name, lines: string[] }
+    let activeFileIndex = -1;
+    let selectedLineIndex = 0;
+    let highlightedRange = null; // { start, end, isOverflow }
+
+    function showToast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(el._timer);
+      el._timer = setTimeout(() => el.classList.remove("show"), 3200);
+    }
+
+    function padRight(str, len) {
+      str = String(str ?? "");
+      if (str.length > len) return str.slice(0, len);
+      return str + " ".repeat(len - str.length);
+    }
+
+    function padLeftZeros(str, len) {
+      str = String(str ?? "").replace(/\D/g, "");
+      if (str.length > len) return str.slice(-len);
+      return "0".repeat(len - str.length) + str;
+    }
+
+    function formatFieldVal(val, field) {
+      if (field.type === "N") {
+        const trimmed = val.trim();
+        if (trimmed === "" && field.req === "C") {
+          return " ".repeat(field.len);
+        }
+        return padLeftZeros(trimmed, field.len);
+      }
+      return padRight(val, field.len);
+    }
+
+    // =========================================================================
+    // MOTOR DE AUDITORIA DOCCOB 3.0A
+    // =========================================================================
+    function auditFile(lines) {
+      const globalErrors = [];
+      const lineAudits = lines.map((line, idx) => {
+        const rec = line.slice(0, 3);
+        const layout = LAYOUTS[rec];
+        const errors = [];
+        const fieldErrors = {};
+
+        if (line.length !== 170) {
+          errors.push(`Tamanho inválido: ${line.length} posições (o layout exige exatamente 170 posições).`);
+        }
+
+        if (!layout) {
+          errors.push(`Identificador de registro desconhecido: "${rec}".`);
+          return { lineIndex: idx, rec, layout: null, errors, fieldErrors };
+        }
+
+        layout.fields.forEach(f => {
+          const val = line.slice(f.start - 1, f.start - 1 + f.len);
+          const fErrs = [];
+
+          if (val.length < f.len) {
+            fErrs.push(`Campo truncado (possui ${val.length} de ${f.len} posições).`);
+          }
+
+          if (f.expected && val !== f.expected) {
+            fErrs.push(`Esperado "${f.expected}", encontrado "${val}".`);
+          }
+
+          if (f.allowed) {
+            if (!f.allowed.includes(val)) {
+              // Verifica se o caractere válido escorregou para a posição seguinte (ex: pos 168 no 352)
+              if (rec === "352" && f.n === 19) {
+                const nextChar = line[167]; // pos 168 (0-based 167)
+                if (f.allowed.includes(nextChar) && val === " ") {
+                  fErrs.push(`Ação do Documento deslocada para a posição 168 ("${nextChar}"). A posição 167 está em branco e será rejeitada pelo TMS.`);
+                } else {
+                  fErrs.push(`Ação do Documento inválida ("${val}"). O TMS exige: I=Incluir, C=Complementar ou E=Excluir.`);
+                }
+              } else {
+                fErrs.push(`Valor inválido ("${val}"). Valores permitidos: ${f.allowed.join(", ")}.`);
+              }
+            }
+          }
+
+          if (f.type === "N") {
+            const isBlank = val.trim() === "";
+            if (f.req === "M" && isBlank) {
+              fErrs.push(`Campo numérico obrigatório está em branco.`);
+            } else if (!isBlank && !/^\d+$/.test(val)) {
+              fErrs.push(`Campo numérico (N ${f.len}) deve conter apenas dígitos alinhados à direita com zeros à esquerda (encontrado "${val}").`);
+            }
+          }
+
+          if (f.type === "A" && f.req === "M" && f.n !== 19) {
+            if (val.trim() === "") {
+              fErrs.push(`Campo alfanumérico obrigatório está em branco.`);
+            }
+          }
+
+          if (fErrs.length > 0) {
+            fieldErrors[f.n] = fErrs;
+            fErrs.forEach(msg => errors.push(`Campo ${f.n} (${f.name}, pos. ${f.start}–${f.start + f.len - 1}): ${msg}`));
+          }
+        });
+
+        // Verifica sobra após posição 170
+        if (line.length > 170) {
+          const extra = line.slice(170);
+          errors.push(`Excesso de ${extra.length} caractere(s) após a posição 170: "${extra}".`);
+        }
+
+        return { lineIndex: idx, rec, layout, errors, fieldErrors };
+      });
+
+      // Validação cruzada: Registro 355 vs Registros 352
+      let count352 = 0;
+      let sum352Cents = 0;
+      lines.forEach(l => {
+        if (l.startsWith("352")) {
+          count352++;
+          const rawVal = l.slice(43, 58).replace(/\D/g, "");
+          if (rawVal) sum352Cents += parseInt(rawVal, 10);
+        }
+      });
+
+      lines.forEach((l, idx) => {
+        if (l.startsWith("355")) {
+          const qtdStr = l.slice(3, 7);
+          const totStr = l.slice(7, 22);
+          const qtd = parseInt(qtdStr, 10);
+          const totCents = parseInt(totStr, 10);
+
+          if (!isNaN(qtd) && qtd !== count352) {
+            const msg = `Totalizador de documentos divergente no registro 355 (pos. 4–7): informa ${qtd}, mas o arquivo contém ${count352} registro(s) 352.`;
+            lineAudits[idx].errors.push(msg);
+            lineAudits[idx].fieldErrors[2] = lineAudits[idx].fieldErrors[2] || [];
+            lineAudits[idx].fieldErrors[2].push(msg);
+          }
+
+          if (!isNaN(totCents) && totCents !== sum352Cents) {
+            const msg = `Valor total divergente no registro 355 (pos. 8–22): informa ${(totCents / 100).toFixed(2)}, mas a soma dos registros 352 é ${(sum352Cents / 100).toFixed(2)}.`;
+            lineAudits[idx].errors.push(msg);
+            lineAudits[idx].fieldErrors[3] = lineAudits[idx].fieldErrors[3] || [];
+            lineAudits[idx].fieldErrors[3].push(msg);
+          }
+        }
+      });
+
+      lineAudits.forEach(la => {
+        la.errors.forEach(e => globalErrors.push(`Linha ${la.lineIndex + 1} (${la.rec}): ${e}`));
+      });
+
+      return { globalErrors, lineAudits };
+    }
+
+    // =========================================================================
+    // MOTOR DE AUTO-CORREÇÃO DOCCOB 3.0A
+    // =========================================================================
+    function autoFixLines(lines) {
+      const fixed = lines.map(line => {
+        const rec = line.slice(0, 3);
+
+        // Tratamento especial para Registro 352
+        if (rec === "352") {
+          let work = line;
+
+          // Caso 1A: Deslocamento de 1 caractere à direita a partir da pos. 44 (ex: Valor Doc com 16 dígitos + CAR/BCO deslocado)
+          const from44 = work.slice(43);
+          const shift1RawMatch = from44.match(/^(\d{16})([A-Za-z]{3})(\d{15})(\d{15})(\d{8})(\d{15})([A-Za-z ].{34})(.*)$/);
+          if (shift1RawMatch) {
+            const valDoc = shift1RawMatch[1].slice(-15);
+            const tipoCob = shift1RawMatch[2];
+            const icms = shift1RawMatch[3];
+            const juros = shift1RawMatch[4];
+            const dtDesc = shift1RawMatch[5];
+            const valDesc = shift1RawMatch[6];
+            const agente = shift1RawMatch[7];
+            const rest150 = shift1RawMatch[8];
+            work = work.slice(0, 43) + valDoc + tipoCob + icms + juros + dtDesc + valDesc + agente + rest150;
+          } else {
+            // Caso 1B: Arquivo já salvo com o dígito final do Valor Doc invadindo a pos. 59 (ex: "8CA" + ICMS sem o 'R')
+            const shift1PartialMatch = from44.match(/^(\d{15})(\d[A-Za-z]{2})(\d{15})(\d{15})(\d{8})(\d{15})([A-Za-z ].{34})(.*)$/);
+            if (shift1PartialMatch) {
+              const valDoc = shift1PartialMatch[1].slice(1) + shift1PartialMatch[2][0];
+              const prefixCob = shift1PartialMatch[2].slice(1).toUpperCase();
+              const tipoCob = prefixCob === "CA" ? "CAR" : (prefixCob === "BC" ? "BCO" : padRight(prefixCob, 3));
+              const icms = shift1PartialMatch[3].slice(1) + shift1PartialMatch[4][0];
+              const juros = shift1PartialMatch[4].slice(1) + shift1PartialMatch[5][0];
+              const dtDesc = shift1PartialMatch[5].slice(1) + shift1PartialMatch[6][0];
+              const valDesc = shift1PartialMatch[6].slice(1) + shift1PartialMatch[7][0];
+              const agente = padRight(shift1PartialMatch[7].slice(1), 35);
+              const rest150 = shift1PartialMatch[8];
+              work = work.slice(0, 43) + valDoc + tipoCob + icms + juros + dtDesc + valDesc + agente + rest150;
+            }
+          }
+
+          // Caso 1C: 29 espaços indevidos logo após Tipo de Cobrança (pos. 62 em diante)
+          const afterTipoCob = work.slice(61);
+          const spaceShiftMatch = afterTipoCob.match(/^( {10,40})(\d{15}\d{15}\d{8}\d{15})(.*)$/);
+          if (spaceShiftMatch) {
+            work = work.slice(0, 61) + spaceShiftMatch[2] + spaceShiftMatch[3];
+          }
+
+          // Caso 1D: Valores numéricos (ICMS, Juros, Data Limite, Desconto) colados ou deslocados para o Agente de Cobrança
+          const valDocMatch = work.slice(43, 58);
+          const tipoCobMatch = work.slice(58, 61);
+          if (/^\d{15}$/.test(valDocMatch) && ["CAR", "BCO"].includes(tipoCobMatch)) {
+            const tailText = work.slice(61);
+            // Procura por um bloco numérico concatenado de 53 dígitos (ICMS 15 + Juros 15 + Data Limite 8 + Desconto 15)
+            const clumpMatch = tailText.match(/(\d{53})/);
+            if (clumpMatch) {
+              const clump = clumpMatch[1];
+              const icms = clump.slice(0, 15);
+              const juros = clump.slice(15, 30);
+              const dtLim = clump.slice(30, 38);
+              const desc = clump.slice(38, 53);
+              const agente = "BANCO ITAU S.A.                    "; // 35 chars
+              work = work.slice(0, 61) + icms + juros + dtLim + desc + agente;
+            } else {
+              const numTokens = tailText.match(/\d+/g);
+              if (numTokens && numTokens.length >= 4) {
+                const icms = padLeftZeros(numTokens[0], 15);
+                const juros = padLeftZeros(numTokens[1], 15);
+                const dtLim = padRight(numTokens[2], 8);
+                const desc = padLeftZeros(numTokens[3], 15);
+                const agente = "BANCO ITAU S.A.                    ";
+                work = work.slice(0, 61) + icms + juros + dtLim + desc + agente;
+              }
+            }
+          }
+
+          // Caso 2: Realinha região bancária + Ação do Documento (pos. 150 em diante)
+          const tail150 = work.slice(149);
+          const shift168Match = tail150.match(/^([\d ]{4})([\dA-Za-z ])([\d ]{10})([\dA-Za-z ]) ([ICE])(.*)$/);
+          if (shift168Match) {
+            const ag = shift168Match[1];
+            const digAg = shift168Match[2];
+            const conta = shift168Match[3];
+            const digConta = padRight(shift168Match[4], 2);
+            const acao = shift168Match[5];
+            work = work.slice(0, 149) + ag + digAg + conta + digConta + acao + "   ";
+          } else {
+            let ag = work.slice(149, 153);
+            let digAg = work.slice(153, 154) || " ";
+            let conta = work.slice(154, 164);
+            let digConta = padRight(work.slice(164, 166), 2);
+            let acao = work.slice(166, 167);
+
+            if (!["I", "C", "E"].includes(acao)) {
+              const near = work.slice(166, 173);
+              const found = near.match(/[ICE]/);
+              acao = found ? found[0] : "I";
+            }
+
+            ag = ag.trim() !== "" ? padLeftZeros(ag, 4) : "    ";
+            conta = conta.trim() !== "" ? padLeftZeros(conta, 10) : "          ";
+
+            work = work.slice(0, 149) + ag + digAg + conta + digConta + acao + "   ";
+          }
+
+          // Caso 3: Sanitiza TODOS os campos do registro 352 conforme o layout oficial
+          // Remove letras/caracteres indevidos em campos numéricos (ex: "R00000000001758" -> "000000000001758")
+          const layout352 = LAYOUTS["352"];
+          let rebuilt352 = "";
+          layout352.fields.forEach(f => {
+            let raw = work.slice(f.start - 1, f.start - 1 + f.len);
+            if (f.expected) raw = f.expected;
+            rebuilt352 += formatFieldVal(raw, f);
+          });
+
+          return padRight(rebuilt352, 170);
+        }
+
+        // Para os demais registros conhecidos, ajusta cada campo ao formato e trava em 170 bytes
+        const layout = LAYOUTS[rec];
+        if (layout) {
+          let rebuilt = "";
+          layout.fields.forEach(f => {
+            let raw = line.slice(f.start - 1, f.start - 1 + f.len);
+            if (f.expected) raw = f.expected;
+            rebuilt += formatFieldVal(raw, f);
+          });
+          return padRight(rebuilt, 170);
+        }
+
+        return padRight(line, 170);
+      });
+
+      // Recalcula totalizadores do Registro 355
+      let count352 = 0;
+      let sum352Cents = 0;
+      fixed.forEach(l => {
+        if (l.startsWith("352")) {
+          count352++;
+          const rawVal = l.slice(43, 58).replace(/\D/g, "");
+          if (rawVal) sum352Cents += parseInt(rawVal, 10);
+        }
+      });
+
+      return fixed.map(l => {
+        if (l.startsWith("355")) {
+          const qtd = padLeftZeros(String(count352), 4);
+          const tot = padLeftZeros(String(sum352Cents), 15);
+          return padRight("355" + qtd + tot, 170);
+        }
+        return l;
+      });
+    }
+
+    // =========================================================================
+    // RENDERIZAÇÃO DA INTERFACE
+    // =========================================================================
+    function render() {
+      const hasFiles = files.length > 0 && activeFileIndex >= 0;
+      document.getElementById("btnAutoFix").style.display = hasFiles ? "inline-flex" : "none";
+      document.getElementById("btnDownload").style.display = hasFiles ? "inline-flex" : "none";
+      document.getElementById("auditArea").style.display = hasFiles ? "block" : "none";
+
+      renderTabs();
+      if (!hasFiles) return;
+
+      const currentFile = files[activeFileIndex];
+      const audit = auditFile(currentFile.lines);
+
+      renderAuditBanner(audit);
+      renderLineList(currentFile.lines, audit);
+      renderEditor(currentFile.lines, audit);
+    }
+
+    function renderTabs() {
+      const container = document.getElementById("fileTabs");
+      container.innerHTML = "";
+      files.forEach((f, idx) => {
+        const audit = auditFile(f.lines);
+        const ok = audit.globalErrors.length === 0;
+        const tab = document.createElement("button");
+        tab.type = "button";
+        tab.className = "file-tab" + (idx === activeFileIndex ? " active" : "");
+        tab.innerHTML = `${ok ? "✅" : "❌"} ${escapeHtml(f.name)}`;
+        tab.onclick = () => {
+          activeFileIndex = idx;
+          selectedLineIndex = 0;
+          highlightedRange = null;
+          render();
+        };
+        container.appendChild(tab);
+      });
+    }
+
+    function renderAuditBanner(audit) {
+      const banner = document.getElementById("auditBanner");
+      if (audit.globalErrors.length === 0) {
+        banner.className = "audit-banner ok";
+        banner.innerHTML = `
+          <div class="audit-title">✅ Arquivo 100% válido no padrão EDI PROCEDA DOCCOB 3.0A (170 posições fixas e posição 167 correta).</div>
+        `;
+      } else {
+        const itemsHtml = audit.globalErrors.map(err => `<li>${escapeHtml(err)}</li>`).join("");
+        banner.className = "audit-banner error";
+        banner.innerHTML = `
+          <div class="audit-title">❌ ${audit.globalErrors.length} erro(s) encontrado(s) neste arquivo:</div>
+          <button type="button" class="btn btn-warning" onclick="triggerAutoFix()">✨ Corrigir Automaticamente</button>
+          <ul class="error-list">${itemsHtml}</ul>
+        `;
+      }
+    }
+
+    function renderLineList(lines, audit) {
+      document.getElementById("lineCount").textContent = lines.length;
+      const list = document.getElementById("lineList");
+      list.innerHTML = "";
+
+      lines.forEach((line, idx) => {
+        const la = audit.lineAudits[idx];
+        const hasErr = la.errors.length > 0;
+        const div = document.createElement("div");
+        div.className = "line-item" + (idx === selectedLineIndex ? " selected" : "") + (hasErr ? " has-error" : "");
+        const shortName = la.layout ? la.layout.name : "Registro Desconhecido";
+        div.innerHTML = `
+          <div class="line-meta">
+            <span class="line-num">#${String(idx + 1).padStart(2, "0")}</span>
+            <span class="rec-badge">${escapeHtml(la.rec)}</span>
+            <span class="rec-name">${escapeHtml(shortName)}</span>
+          </div>
+          <span class="len-pill ${line.length === 170 && !hasErr ? "ok" : "err"}">${line.length}b</span>
+        `;
+        div.onclick = () => {
+          selectedLineIndex = idx;
+          highlightedRange = null;
+          render();
+        };
+        list.appendChild(div);
+      });
+    }
+
+    function renderRuler(line) {
+      const strip = document.getElementById("rulerStrip");
+      const maxLen = Math.max(170, line.length);
+
+      let tensLine = "";
+      let unitsLine = "";
+      for (let i = 1; i <= maxLen; i++) {
+        if (i === 1 || i % 10 === 0) {
+          const label = String(i);
+          tensLine += label;
+          i += label.length - 1;
+        } else {
+          tensLine += " ";
+        }
+      }
+      for (let i = 1; i <= maxLen; i++) {
+        unitsLine += String(i % 10);
+      }
+
+      let charsHtml = "";
+      for (let i = 0; i < line.length; i++) {
+        const pos1 = i + 1;
+        const ch = line[i];
+        const isSpace = ch === " ";
+        const displayCh = isSpace ? "·" : escapeHtml(ch);
+        const classes = ["char-cell"];
+        if (isSpace) classes.push("space-dot");
+        if (pos1 > 170) classes.push("overflow");
+        if (highlightedRange && pos1 >= highlightedRange.start && pos1 <= highlightedRange.end) {
+          classes.push("highlight");
+        }
+        charsHtml += `<span class="${classes.join(" ")}" title="Posição ${pos1}">${displayCh}</span>`;
+      }
+
+      strip.innerHTML =
+        `<div class="ruler-ticks">${escapeHtml(tensLine)}</div>` +
+        `<div class="ruler-ticks">${escapeHtml(unitsLine)}</div>` +
+        `<div>${charsHtml}</div>`;
+    }
+
+    function renderEditor(lines, audit) {
+      if (selectedLineIndex >= lines.length) selectedLineIndex = 0;
+      const line = lines[selectedLineIndex];
+      const la = audit.lineAudits[selectedLineIndex];
+
+      document.getElementById("editorTitle").textContent =
+        `Linha #${selectedLineIndex + 1} — ${la.layout ? la.layout.name : "Registro Desconhecido"}`;
+      document.getElementById("editorLineInfo").textContent = `Tamanho atual: ${line.length} / 170 posições`;
+
+      renderRuler(line);
+
+      const tbody = document.getElementById("fieldsTbody");
+      tbody.innerHTML = "";
+
+      if (!la.layout) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td colspan="5">
+            <input type="text" class="field-input" value="${escapeHtml(line)}" onchange="updateRawLine(this.value)" />
+          </td>
+        `;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      la.layout.fields.forEach(f => {
+        const endPos = f.start + f.len - 1;
+        const val = line.slice(f.start - 1, f.start - 1 + f.len);
+        const fErrs = la.fieldErrors[f.n] || [];
+
+        const tr = document.createElement("tr");
+        if (fErrs.length > 0) tr.className = "field-error";
+
+        tr.onmouseenter = () => {
+          highlightedRange = { start: f.start, end: endPos };
+          document.getElementById("rulerHighlightInfo").textContent =
+            `Campo ${f.n}: ${f.name} (pos. ${f.start} a ${endPos})`;
+          renderRuler(files[activeFileIndex].lines[selectedLineIndex]);
+        };
+
+        const fmtLabel = f.dec > 0 ? `${f.type} ${f.len - f.dec},${f.dec}` : `${f.type} ${f.len}`;
+        const errHtml = fErrs.map(m => `<div class="field-err-msg">⚠️ ${escapeHtml(m)}</div>`).join("");
+        const hintHtml = f.hint ? `<div class="field-hint">${escapeHtml(f.hint)}</div>` : "";
+
+        let controlHtml = "";
+        if (f.options) {
+          const hasCurrent = f.options.some(o => o.value === val);
+          const opts = [
+            ...(!hasCurrent ? [`<option value="${escapeHtml(val)}" selected>⚠️ Inválido: "${escapeHtml(val)}" (Selecione I, C ou E)</option>`] : []),
+            ...f.options.map(o => `<option value="${o.value}" ${o.value === val ? "selected" : ""}>${o.label}</option>`)
+          ].join("");
+          controlHtml = `<select class="field-select" data-field-n="${f.n}">${opts}</select>`;
+        } else {
+          controlHtml = `<input type="text" class="field-input" maxlength="${f.len}" data-field-n="${f.n}" value="${escapeHtml(val)}" />`;
+        }
+
+        tr.innerHTML = `
+          <td><span class="pos-tag">${String(f.start).padStart(3, "0")}–${String(endPos).padStart(3, "0")}</span></td>
+          <td>
+            <strong>${f.n}. ${escapeHtml(f.name)}</strong>
+            ${hintHtml}
+            ${errHtml}
+          </td>
+          <td><span class="fmt-tag">${fmtLabel}</span></td>
+          <td><span class="status-req ${f.req}">${f.req}</span></td>
+          <td>${controlHtml}</td>
+        `;
+
+        const inputEl = tr.querySelector("[data-field-n]");
+        inputEl.addEventListener("change", (e) => {
+          updateFieldValue(f, e.target.value);
+        });
+
+        tbody.appendChild(tr);
+      });
+
+      // Mostra excesso > 170 se existir
+      if (line.length > 170) {
+        const extra = line.slice(170);
+        const tr = document.createElement("tr");
+        tr.className = "field-error";
+        tr.innerHTML = `
+          <td><span class="pos-tag">171–${line.length}</span></td>
+          <td>
+            <strong>Excesso fora do layout (além de 170 bytes)</strong>
+            <div class="field-err-msg">⚠️ Estes ${extra.length} caracteres deslocam o arquivo e causam rejeição.</div>
+          </td>
+          <td><span class="fmt-tag">ERRO</span></td>
+          <td><span class="status-req M">!</span></td>
+          <td>
+            <div style="display:flex;gap:6px;align-items:center;">
+              <input type="text" class="field-input" value="${escapeHtml(extra)}" readonly style="background:#fee2e2;" />
+              <button type="button" class="btn btn-warning" style="padding:5px 10px;white-space:nowrap;" onclick="trimCurrentLine()">Cortar >170</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+    }
+
+    function updateFieldValue(field, newVal) {
+      const fObj = files[activeFileIndex];
+      let line = padRight(fObj.lines[selectedLineIndex], 170);
+      const formatted = formatFieldVal(newVal, field);
+      line = line.slice(0, field.start - 1) + formatted + line.slice(field.start - 1 + field.len);
+      fObj.lines[selectedLineIndex] = line;
+      render();
+      showToast(`Campo "${field.name}" atualizado.`);
+    }
+
+    function updateRawLine(val) {
+      files[activeFileIndex].lines[selectedLineIndex] = val;
+      render();
+    }
+
+    function trimCurrentLine() {
+      const fObj = files[activeFileIndex];
+      fObj.lines[selectedLineIndex] = fObj.lines[selectedLineIndex].slice(0, 170);
+      render();
+      showToast("Excesso após a posição 170 removido.");
+    }
+
+    function triggerAutoFix() {
+      const fObj = files[activeFileIndex];
+      fObj.lines = autoFixLines(fObj.lines);
+      render();
+      showToast("Arquivo corrigido para o padrão DOCCOB 3.0A (170 posições)!");
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // =========================================================================
+    // LEITURA DE ARQUIVOS E EVENTOS
+    // =========================================================================
+    function loadTextAsFile(name, rawText) {
+      const lines = rawText
+        .replace(/\r\n/g, "\n")
+        .replace(/\r/g, "\n")
+        .split("\n")
+        .filter(l => l.length > 0);
+
+      if (lines.length === 0) {
+        showToast("O arquivo está vazio.");
+        return;
+      }
+
+      const existingIdx = files.findIndex(f => f.name === name);
+      if (existingIdx >= 0) {
+        files[existingIdx].lines = lines;
+        activeFileIndex = existingIdx;
+      } else {
+        files.push({ name, lines });
+        activeFileIndex = files.length - 1;
+      }
+
+      selectedLineIndex = 0;
+      highlightedRange = null;
+      render();
+      showToast(`Arquivo "${name}" carregado (${lines.length} registros).`);
+    }
+
+    function handleFileList(fileList) {
+      if (!fileList || fileList.length === 0) return;
+      Array.from(fileList).forEach(file => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          loadTextAsFile(file.name, e.target.result);
+        };
+        reader.onerror = async () => {
+          try {
+            const txt = await file.text();
+            loadTextAsFile(file.name, txt);
+          } catch (err) {
+            showToast("Não foi possível ler o arquivo no navegador.");
+          }
+        };
+        reader.readAsText(file, "ISO-8859-1");
+      });
+    }
+
+    const fileInput = document.getElementById("fileInput");
+    fileInput.addEventListener("change", (e) => {
+      handleFileList(e.target.files);
+      e.target.value = "";
+    });
+
+    const dropzone = document.getElementById("dropzone");
+    ["dragenter", "dragover"].forEach(evt => {
+      window.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+    });
+    ["dragleave", "drop"].forEach(evt => {
+      window.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+      });
+    });
+    window.addEventListener("drop", (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileList(e.dataTransfer.files);
+      }
+    });
+
+    document.getElementById("btnAutoFix").addEventListener("click", triggerAutoFix);
+
+    document.getElementById("btnDownload").addEventListener("click", () => {
+      if (activeFileIndex < 0) return;
+      const fObj = files[activeFileIndex];
+      const content = fObj.lines.join("\r\n") + "\r\n";
+      const blob = new Blob([content], { type: "text/plain;charset=iso-8859-1" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = fObj.name.replace(/\.txt$/i, "") + "_corrigido.txt";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast("Download iniciado!");
+    });
+
+    // Modal Colar Texto
+    const pasteModal = document.getElementById("pasteModal");
+    const openPaste = () => {
+      pasteModal.classList.add("open");
+      document.getElementById("pasteTextarea").focus();
+    };
+    const closePaste = () => pasteModal.classList.remove("open");
+
+    document.getElementById("btnOpenPaste").addEventListener("click", openPaste);
+    document.getElementById("btnPasteEmpty").addEventListener("click", openPaste);
+    document.getElementById("btnClosePaste").addEventListener("click", closePaste);
+    document.getElementById("btnCancelPaste").addEventListener("click", closePaste);
+    document.getElementById("btnConfirmPaste").addEventListener("click", () => {
+      const name = document.getElementById("pasteFileName").value.trim() || "doccob_corrigido.txt";
+      const txt = document.getElementById("pasteTextarea").value;
+      if (!txt.trim()) {
+        showToast("Cole o conteúdo do arquivo antes de continuar.");
+        return;
+      }
+      loadTextAsFile(name, txt);
+      closePaste();
+    });
+
+    // Botões de Exemplo
+    document.getElementById("btnSample1").addEventListener("click", () => {
+      loadTextAsFile("docluftcob_000461348.txt", SAMPLE_1);
+    });
+    document.getElementById("btnSample2").addEventListener("click", () => {
+      loadTextAsFile("2457826.txt", SAMPLE_2);
+    });
+  </script>
+</body>
+</html>
